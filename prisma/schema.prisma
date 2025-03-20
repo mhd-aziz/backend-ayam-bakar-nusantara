@@ -1,0 +1,68 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "mysql"  // Atau "postgresql" jika Anda menggunakan PostgreSQL
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model AuthUser {
+  id        Int         @id @default(autoincrement())
+  username  String      @unique
+  email     String      @unique
+  password  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  userProfile UserProfile?
+  sellers   Seller[]    // Relasi dengan seller
+  
+}
+
+model UserProfile {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique
+  profilePicture String   @db.VarChar(1024)
+  fullName       String?
+  phoneNumber    String?
+  address        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user AuthUser @relation(fields: [userId], references: [id])
+}
+
+model Seller {
+  id                  Int      @id @default(autoincrement())
+  sellerId            String   @unique // Seller ID
+  storeName           String
+  storeDescription    String?
+  storeAddress        String
+  storeCoordinates    Json 
+  storeImage          String  @db.Text
+  customGoogleMapLink String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  userId Int   @unique 
+  user    AuthUser @relation(fields: [userId], references: [id])
+
+  // Relasi dengan produk yang dijual oleh seller
+  products Product[] // Menambahkan relasi dengan model Product
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  productName String
+  category    String
+  productImage String  @db.Text
+  productPrice Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sellerId    String  // Change from Int to String for the Seller reference
+  seller      Seller  @relation(fields: [sellerId], references: [sellerId]) // Reference to sellerId (formatted)
+}
